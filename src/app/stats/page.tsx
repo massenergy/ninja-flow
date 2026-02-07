@@ -17,7 +17,9 @@ import {
 
 export default function StatsPage() {
   const [settings, setSettings] = useState({
+    phaseDuration: 4,
     goalDuration: 10,
+    soundscape: 'Zen Garden',
   });
   const [sessionHistory, setSessionHistory] = useState<number[]>([]);
 
