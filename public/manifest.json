@@ -1,23 +1,29 @@
 {
+  "name": "Ninja Flow",
   "short_name": "Ninja Flow",
-  "name": "Ninja Flow: Breathwork Guide",
+  "description": "A box-breathing tool to help you find your flow.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F3FF",
+  "theme_color": "#7950F2",
   "icons": [
     {
-      "src": "icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
-      "src": "icon-512.png",
-      "type": "image/png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "purpose": "maskable"
+      "type": "image/png"
     }
   ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#7950F2",
-  "background_color": "#F5F3FF",
-  "description": "A box-breathing tool to help you find your flow.",
-  "orientation": "portrait"
+  "shortcuts": [
+    {
+      "name": "Start a new session",
+      "short_name": "New Session",
+      "description": "Begin a new breathing exercise",
+      "url": "/"
+    }
+  ]
 }
