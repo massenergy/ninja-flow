@@ -1,5 +1,11 @@
 // @ts-check
 
+const withPWA = require('@ducanh2912/next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   /* config options here */
@@ -59,4 +65,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withPWA(nextConfig);
