@@ -16,6 +16,13 @@ import {
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { LineChart, Line, CartesianGrid, XAxis, YAxis } from "recharts"
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
 
 
 const soundscapes = [
@@ -32,6 +39,16 @@ export default function NinjaFlowPage() {
     soundscape: 'Zen Garden',
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [sessionHistory, setSessionHistory] = useState<number[]>([]);
+
+  useEffect(() => {
+    try {
+        const storedHistory = window.localStorage.getItem('ninjaFlowHistory');
+        if (storedHistory) {
+            setSessionHistory(JSON.parse(storedHistory));
+        }
+    } catch (e) { console.error("Could not load session history", e); }
+  }, []);
 
   const {
     isSessionActive,
@@ -41,6 +58,19 @@ export default function NinjaFlowPage() {
     countdown,
     totalTime,
   } = useBreathingCycle({ phaseDurationInSeconds: settings.phaseDuration });
+
+  const prevIsSessionActive = useRef(isSessionActive);
+
+  useEffect(() => {
+    if (prevIsSessionActive.current && !isSessionActive && totalTime > 1000) { // Session ended, save if > 1s
+        const newHistory = [...sessionHistory, totalTime];
+        setSessionHistory(newHistory);
+        try {
+            window.localStorage.setItem('ninjaFlowHistory', JSON.stringify(newHistory));
+        } catch (e) { console.error("Could not save session history", e); }
+    }
+    prevIsSessionActive.current = isSessionActive;
+  }, [isSessionActive, totalTime, sessionHistory]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [currentSound, setCurrentSound] = useState(() => soundscapes.find(s => s.name === settings.soundscape) || soundscapes[0]);
@@ -58,23 +88,23 @@ export default function NinjaFlowPage() {
         }
     }
   }, [isSessionActive, currentSound.url]);
+  
+  const currentDuration = isSessionActive ? totalTime : (sessionHistory.length > 0 ? sessionHistory[sessionHistory.length - 1] : 0);
+  const highestDuration = useMemo(() => Math.max(0, ...sessionHistory), [sessionHistory]);
 
-  const minutes = Math.floor(totalTime / 60000);
-  const seconds = Math.floor((totalTime % 60000) / 1000);
+  const formatDuration = (ms: number) => {
+    if (typeof ms !== 'number' || isNaN(ms)) ms = 0;
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
 
-  const scale = useMemo(() => {
-    if (!isSessionActive) return 1;
-    // In: 0 -> 1, Hold: 1, Out: 1 -> 0, Hold: 0
-    if (currentPhase === 'Breathe In' || (currentPhase === 'Hold' && currentPhaseIndex === 1)) {
-      return 1.15;
-    }
-    return 1;
-  }, [isSessionActive, currentPhase, currentPhaseIndex]);
-
+  const minutesForGoal = Math.floor(currentDuration / 60000);
   const goalInMinutes = settings.goalDuration;
+
   const progressDots = useMemo(() => {
     const totalDots = Math.max(1, goalInMinutes);
-    const activeDots = Math.min(minutes, totalDots);
+    const activeDots = Math.min(minutesForGoal, totalDots);
     return Array.from({ length: totalDots }).map((_, i) => (
       <Circle
         key={i}
@@ -84,7 +114,35 @@ export default function NinjaFlowPage() {
         )}
       />
     ));
-  }, [minutes, goalInMinutes]);
+  }, [minutesForGoal, goalInMinutes]);
+
+  const chartData = useMemo(() => {
+    const lastFive = sessionHistory.slice(-5);
+    if (lastFive.length === 0) {
+      return [{ session: "1", duration: 0 }];
+    }
+    return lastFive.map((duration, index) => ({
+      session: `${sessionHistory.length - lastFive.length + index + 1}`,
+      duration: parseFloat((duration / 60000).toFixed(2)), // duration in minutes
+    }));
+  }, [sessionHistory]);
+
+  const chartConfig = {
+    duration: {
+      label: "Duration (min)",
+      color: "hsl(var(--primary))",
+    },
+  } satisfies ChartConfig;
+
+
+  const scale = useMemo(() => {
+    if (!isSessionActive) return 1;
+    // In: 0 -> 1, Hold: 1, Out: 1 -> 0, Hold: 0
+    if (currentPhase === 'Breathe In' || (currentPhase === 'Hold' && currentPhaseIndex === 1)) {
+      return 1.15;
+    }
+    return 1;
+  }, [isSessionActive, currentPhase, currentPhaseIndex]);
 
   return (
     <div className="flex flex-col min-h-screen text-slate-800 dark:text-slate-200">
@@ -117,14 +175,68 @@ export default function NinjaFlowPage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-2xl">
-          <Card className="glass-card">
+          <Card className="glass-card col-span-2 md:col-span-4">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Daily Progress</CardTitle>
+              <CardTitle className="text-sm font-medium">My Stats</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`}</div>
-              <div className="flex gap-1 mt-1 flex-wrap">{progressDots}</div>
+            <CardContent className="space-y-4 pt-4">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-xs text-muted-foreground">Current</p>
+                  <p className="text-lg font-bold">{formatDuration(currentDuration)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Highest</p>
+                  <p className="text-lg font-bold">{formatDuration(highestDuration)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Daily Goal</p>
+                  <div className="flex justify-center gap-1.5 mt-2 flex-wrap">{progressDots}</div>
+                </div>
+              </div>
+
+              <div className="h-24">
+                <ChartContainer config={chartConfig} className="h-full w-full">
+                  <LineChart
+                    data={chartData}
+                    margin={{ top: 5, right: 20, left: -10, bottom: 0 }}
+                  >
+                    <CartesianGrid vertical={false} strokeDasharray="2 2" strokeOpacity={0.5} />
+                    <XAxis dataKey="session" tickLine={false} axisLine={false} tickMargin={8} fontSize={10} interval="preserveStartEnd" />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      fontSize={10}
+                      domain={['auto', 'auto']}
+                      allowDecimals={false}
+                    />
+                    <ChartTooltip
+                      cursor={{ strokeDasharray: '3 3', strokeOpacity: 0.5 }}
+                      content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Line
+                      dataKey="duration"
+                      type="monotone"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={{
+                        r: 4,
+                        fill: "hsl(var(--primary))",
+                        stroke: "hsl(var(--background))",
+                        strokeWidth: 2
+                      }}
+                      activeDot={{
+                        r: 6,
+                        fill: "hsl(var(--primary))",
+                        stroke: "hsl(var(--background))",
+                        strokeWidth: 2,
+                      }}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </div>
             </CardContent>
           </Card>
           <Card className="glass-card cursor-pointer" onClick={() => setIsSettingsOpen(true)}>

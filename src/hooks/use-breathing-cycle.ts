@@ -16,7 +16,6 @@ export const useBreathingCycle = ({ phaseDurationInSeconds = 4 }: { phaseDuratio
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const sessionStartTimeRef = useRef<number | null>(null);
     const phaseStartTimeRef = useRef<number | null>(null);
-    const accumulatedTimeRef = useRef(0);
 
     const speak = useCallback((text: string) => {
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -33,13 +32,6 @@ export const useBreathingCycle = ({ phaseDurationInSeconds = 4 }: { phaseDuratio
         timerRef.current = null;
         setIsSessionActive(false);
 
-        if (sessionStartTimeRef.current) {
-            accumulatedTimeRef.current += Date.now() - sessionStartTimeRef.current;
-        }
-
-        sessionStartTimeRef.current = null;
-        phaseStartTimeRef.current = null;
-
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
@@ -54,6 +46,8 @@ export const useBreathingCycle = ({ phaseDurationInSeconds = 4 }: { phaseDuratio
         sessionStartTimeRef.current = now;
         phaseStartTimeRef.current = now;
         
+        setTotalTime(0);
+        
         setCurrentPhaseIndex(0);
         setCountdown(PHASE_DURATION_S);
         speak(PHASES[0]);
@@ -62,10 +56,10 @@ export const useBreathingCycle = ({ phaseDurationInSeconds = 4 }: { phaseDuratio
             const currentTime = Date.now();
             if (!phaseStartTimeRef.current || !sessionStartTimeRef.current) return;
             
-            const phaseElapsedTime = currentTime - phaseStartTimeRef.current;
-            const sessionElapsedTime = accumulatedTimeRef.current + (currentTime - sessionStartTimeRef.current);
-
+            const sessionElapsedTime = currentTime - sessionStartTimeRef.current;
             setTotalTime(sessionElapsedTime);
+
+            const phaseElapsedTime = currentTime - phaseStartTimeRef.current;
 
             const secondsIntoPhase = Math.floor(phaseElapsedTime / 1000);
             const newCountdown = PHASE_DURATION_S - secondsIntoPhase;
