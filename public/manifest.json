@@ -4,7 +4,7 @@
   "description": "A box-breathing tool to help you find your flow.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F5F3FF",
+  "background_color": "#7950F2",
   "theme_color": "#7950F2",
   "icons": [
     {
@@ -16,14 +16,6 @@
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Start a new session",
-      "short_name": "New Session",
-      "description": "Begin a new breathing exercise",
-      "url": "/"
     }
   ]
 }
