@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Home, BarChart3, Compass, MoreHorizontal, Circle } from 'lucide-react';
+import { Home, BarChart3, Circle } from 'lucide-react';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis } from "recharts"
 import {
   ChartContainer,
@@ -166,12 +166,6 @@ export default function StatsPage() {
               <BarChart3 className="w-5 h-5" />
             </Button>
           </Link>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Compass className="w-5 h-5 text-muted-foreground" />
-          </Button>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
-          </Button>
         </nav>
       </footer>
     </div>

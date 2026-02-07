@@ -6,7 +6,7 @@ import { useBreathingCycle } from '@/hooks/use-breathing-cycle';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Info, Home, BarChart3, Compass, MoreHorizontal, Target, Music, Settings, Circle } from 'lucide-react';
+import { Info, Home, BarChart3, Target, Music, Settings, Circle } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -161,12 +161,6 @@ export default function NinjaFlowPage() {
               <BarChart3 className="w-5 h-5 text-muted-foreground" />
             </Button>
           </Link>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Compass className="w-5 h-5 text-muted-foreground" />
-          </Button>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
-          </Button>
         </nav>
       </footer>
        <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
