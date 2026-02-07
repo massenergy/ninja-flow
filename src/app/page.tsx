@@ -97,7 +97,7 @@ export default function NinjaFlowPage() {
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = settings.volume; 
+      audioRef.current.volume = settings.volume;
       if (audioRef.current.src !== currentSound.url) {
         audioRef.current.src = currentSound.url;
         audioRef.current.loop = true;
@@ -110,11 +110,20 @@ export default function NinjaFlowPage() {
     }
   }, [isSessionActive, currentSound.url, settings.volume]);
 
+  // Helper to format duration showing MM:SS
   const formatTimer = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  const handleToggleSession = () => {
+    if (!isSessionActive && audioRef.current) {
+      // Explicitly trigger play on user interaction to handle mobile autoplay restrictions
+      audioRef.current.play().catch(e => console.error("Manual audio play failed", e));
+    }
+    toggleSession();
   };
 
   const goalInMinutes = settings.goalDuration;
@@ -129,7 +138,7 @@ export default function NinjaFlowPage() {
 
   return (
     <div className="flex flex-col min-h-screen text-slate-800 dark:text-slate-200">
-      <audio ref={audioRef} />
+      <audio ref={audioRef} playsInline />
       <div className="w-full bg-primary/10 p-2 text-center text-sm text-primary-foreground flex items-center justify-center gap-2">
         <Info className="w-4 h-4 text-primary" />
         <span className="text-primary font-medium">Practice regularly to increase cycle from 4s to 10s</span>
@@ -152,7 +161,7 @@ export default function NinjaFlowPage() {
           className="relative flex items-center justify-center w-64 h-64 sm:w-80 sm:h-80 transition-transform ease-in-out"
         >
           <Button
-            onClick={toggleSession}
+            onClick={handleToggleSession}
             className={cn(
               'relative w-full h-full rounded-full shadow-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-primary transition-all duration-300',
               isSessionActive ? 'bg-opacity-80' : 'bg-opacity-100',
