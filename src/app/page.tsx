@@ -41,7 +41,6 @@ export default function NinjaFlowPage() {
       const storedSettings = window.localStorage.getItem('ninjaFlowSettings');
       if (storedSettings) {
         const loadedSettings = JSON.parse(storedSettings);
-        // Ensure volume is loaded, default to 0.35 if missing (legacy settings)
         setSettings(prevSettings => ({
           ...prevSettings,
           ...loadedSettings,
@@ -75,18 +74,16 @@ export default function NinjaFlowPage() {
     totalTime,
   } = useBreathingCycle({ phaseDurationInSeconds: settings.phaseDuration });
 
-  // Save session to history when it ends
   const previousSessionActiveRef = useRef(isSessionActive);
   useEffect(() => {
     if (previousSessionActiveRef.current && !isSessionActive && totalTime > 0) {
-      setLastSessionDuration(totalTime); // Capture duration for display
+      setLastSessionDuration(totalTime);
       try {
         const storedHistory = window.localStorage.getItem('ninjaFlowHistory');
         let history = [];
         if (storedHistory) {
           history = JSON.parse(storedHistory);
         }
-        // Append new session with timestamp
         history.push({ timestamp: Date.now(), duration: totalTime });
         window.localStorage.setItem('ninjaFlowHistory', JSON.stringify(history));
         console.log("Session saved:", { timestamp: Date.now(), duration: totalTime });
@@ -100,7 +97,7 @@ export default function NinjaFlowPage() {
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = settings.volume; // Update volume
+      audioRef.current.volume = settings.volume; 
       if (audioRef.current.src !== currentSound.url) {
         audioRef.current.src = currentSound.url;
         audioRef.current.loop = true;
@@ -113,7 +110,6 @@ export default function NinjaFlowPage() {
     }
   }, [isSessionActive, currentSound.url, settings.volume]);
 
-  // Helper to format duration showing MM:SS
   const formatTimer = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -125,7 +121,6 @@ export default function NinjaFlowPage() {
 
   const scale = useMemo(() => {
     if (!isSessionActive) return 1;
-    // In: 0 -> 1, Hold: 1, Out: 1 -> 0, Hold: 0
     if (currentPhase === 'Breathe In' || (currentPhase === 'Hold' && currentPhaseIndex === 1)) {
       return 1.15;
     }
@@ -137,7 +132,7 @@ export default function NinjaFlowPage() {
       <audio ref={audioRef} />
       <div className="w-full bg-primary/10 p-2 text-center text-sm text-primary-foreground flex items-center justify-center gap-2">
         <Info className="w-4 h-4 text-primary" />
-        <span className="text-primary font-medium">Practice regularly to increase cycle from 4s to 10s</span>
+        <span className="text-primary font-medium">Tip: Say 'Open Ninja Flow' to start</span>
       </div>
       <main className="flex-1 flex flex-col items-center justify-center p-4 gap-8">
         <div className="text-center h-8 mb-2">
