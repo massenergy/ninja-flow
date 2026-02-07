@@ -127,7 +127,7 @@ export default function NinjaFlowPage() {
               <div className="flex gap-1 mt-1 flex-wrap">{progressDots}</div>
             </CardContent>
           </Card>
-          <Card className="glass-card">
+          <Card className="glass-card cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Goal</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
@@ -137,7 +137,7 @@ export default function NinjaFlowPage() {
               <p className="text-xs text-muted-foreground">daily goal</p>
             </CardContent>
           </Card>
-          <Card className="glass-card">
+          <Card className="glass-card cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Audio</CardTitle>
               <Music className="h-4 w-4 text-muted-foreground" />
