@@ -31,7 +31,8 @@ export default function StatsPage() {
         }
         const storedSettings = window.localStorage.getItem('ninjaFlowSettings');
         if (storedSettings) {
-            setSettings(JSON.parse(storedSettings));
+            const loadedSettings = JSON.parse(storedSettings);
+            setSettings(prevSettings => ({ ...prevSettings, ...loadedSettings }));
         }
     } catch (e) { console.error("Could not load data", e); }
   }, []);
@@ -50,7 +51,7 @@ export default function StatsPage() {
   const goalInMinutes = settings.goalDuration;
 
   const progressDots = useMemo(() => {
-    const totalDots = Math.max(1, goalInMinutes);
+    const totalDots = Math.max(1, goalInMinutes || 0);
     const activeDots = Math.min(minutesForGoal, totalDots);
     return Array.from({ length: totalDots }).map((_, i) => (
       <Circle

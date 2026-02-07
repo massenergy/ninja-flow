@@ -37,7 +37,8 @@ export default function NinjaFlowPage() {
     try {
         const storedSettings = window.localStorage.getItem('ninjaFlowSettings');
         if (storedSettings) {
-            setSettings(JSON.parse(storedSettings));
+            const loadedSettings = JSON.parse(storedSettings);
+            setSettings(prevSettings => ({ ...prevSettings, ...loadedSettings }));
         }
     } catch (e) { console.error("Could not load settings", e); }
   }, []);
