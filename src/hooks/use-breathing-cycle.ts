@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 const PHASES = ['Breathe In', 'Hold', 'Breathe Out', 'Hold'];
-const PHASE_DURATION_S = 4;
-const PHASE_DURATION_MS = PHASE_DURATION_S * 1000;
 
-export const useBreathingCycle = () => {
+export const useBreathingCycle = ({ phaseDurationInSeconds = 4 }: { phaseDurationInSeconds: number }) => {
+    const PHASE_DURATION_S = phaseDurationInSeconds;
+    const PHASE_DURATION_MS = PHASE_DURATION_S * 1000;
+
     const [isSessionActive, setIsSessionActive] = useState(false);
     const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
     const [countdown, setCountdown] = useState(PHASE_DURATION_S);
@@ -45,7 +46,7 @@ export const useBreathingCycle = () => {
         
         // Reset countdown to initial state for next start
         setCountdown(PHASE_DURATION_S);
-    }, []);
+    }, [PHASE_DURATION_S]);
 
     const startSession = useCallback(() => {
         const now = Date.now();
@@ -79,7 +80,13 @@ export const useBreathingCycle = () => {
                 });
             }
         }, 100);
-    }, [speak]);
+    }, [speak, PHASE_DURATION_S, PHASE_DURATION_MS]);
+
+    useEffect(() => {
+        if (!isSessionActive) {
+            setCountdown(phaseDurationInSeconds);
+        }
+    }, [phaseDurationInSeconds, isSessionActive]);
 
     useEffect(() => {
         return () => {

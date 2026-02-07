@@ -1,13 +1,38 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useBreathingCycle } from '@/hooks/use-breathing-cycle';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Info, Home, BarChart3, Compass, MoreHorizontal, Target, Music, Settings, Circle } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+
+
+const soundscapes = [
+  { id: 'zen-garden', name: 'Zen Garden', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+  { id: 'ocean-waves', name: 'Ocean Waves', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+  { id: 'forest-rain', name: 'Forest Rain', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
+];
+
 
 export default function NinjaFlowPage() {
+  const [settings, setSettings] = useState({
+    phaseDuration: 4,
+    goalDuration: 10,
+    soundscape: 'Zen Garden',
+  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   const {
     isSessionActive,
     toggleSession,
@@ -15,7 +40,24 @@ export default function NinjaFlowPage() {
     currentPhaseIndex,
     countdown,
     totalTime,
-  } = useBreathingCycle();
+  } = useBreathingCycle({ phaseDurationInSeconds: settings.phaseDuration });
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [currentSound, setCurrentSound] = useState(() => soundscapes.find(s => s.name === settings.soundscape) || soundscapes[0]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+        if (audioRef.current.src !== currentSound.url) {
+            audioRef.current.src = currentSound.url;
+            audioRef.current.loop = true;
+        }
+        if (isSessionActive) {
+            audioRef.current.play().catch(e => console.error("Audio play failed", e));
+        } else {
+            audioRef.current.pause();
+        }
+    }
+  }, [isSessionActive, currentSound.url]);
 
   const minutes = Math.floor(totalTime / 60000);
   const seconds = Math.floor((totalTime % 60000) / 1000);
@@ -29,8 +71,9 @@ export default function NinjaFlowPage() {
     return 1;
   }, [isSessionActive, currentPhase, currentPhaseIndex]);
 
+  const goalInMinutes = settings.goalDuration;
   const progressDots = useMemo(() => {
-    const totalDots = 10;
+    const totalDots = Math.max(1, goalInMinutes);
     const activeDots = Math.min(minutes, totalDots);
     return Array.from({ length: totalDots }).map((_, i) => (
       <Circle
@@ -41,18 +84,19 @@ export default function NinjaFlowPage() {
         )}
       />
     ));
-  }, [minutes]);
+  }, [minutes, goalInMinutes]);
 
   return (
     <div className="flex flex-col min-h-screen text-slate-800 dark:text-slate-200">
+      <audio ref={audioRef} />
       <div className="w-full bg-primary/10 p-2 text-center text-sm text-primary-foreground flex items-center justify-center gap-2">
         <Info className="w-4 h-4 text-primary" />
         <span className="text-primary font-medium">Tip: Say 'Open Ninja Flow' to start</span>
       </div>
       <main className="flex-1 flex flex-col items-center justify-center p-4 gap-8">
         <div
-          style={{ transform: `scale(${scale})` }}
-          className="relative flex items-center justify-center w-64 h-64 sm:w-80 sm:h-80 transition-transform duration-[4000ms] ease-in-out"
+          style={{ transform: `scale(${scale})`, transitionDuration: `${settings.phaseDuration}s` }}
+          className="relative flex items-center justify-center w-64 h-64 sm:w-80 sm:h-80 transition-transform ease-in-out"
         >
           <Button
             onClick={toggleSession}
@@ -80,7 +124,7 @@ export default function NinjaFlowPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`}</div>
-              <div className="flex gap-1 mt-1">{progressDots}</div>
+              <div className="flex gap-1 mt-1 flex-wrap">{progressDots}</div>
             </CardContent>
           </Card>
           <Card className="glass-card">
@@ -89,7 +133,7 @@ export default function NinjaFlowPage() {
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">10m</div>
+              <div className="text-2xl font-bold">{goalInMinutes}m</div>
               <p className="text-xs text-muted-foreground">daily goal</p>
             </CardContent>
           </Card>
@@ -99,18 +143,18 @@ export default function NinjaFlowPage() {
               <Music className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold truncate">Zen Garden</div>
+              <div className="text-2xl font-bold truncate">{settings.soundscape}</div>
               <p className="text-xs text-muted-foreground">Soundscape</p>
             </CardContent>
           </Card>
-          <Card className="glass-card">
+          <Card className="glass-card cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Config</CardTitle>
               <Settings className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">Customize</div>
-              <p className="text-xs text-muted-foreground">4s cycle</p>
+              <p className="text-xs text-muted-foreground">{settings.phaseDuration}s cycle</p>
             </CardContent>
           </Card>
         </div>
@@ -131,6 +175,55 @@ export default function NinjaFlowPage() {
           </Button>
         </nav>
       </footer>
+       <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+            <SheetContent className="glass-card border-none">
+                <SheetHeader>
+                    <SheetTitle>Customize Your Flow</SheetTitle>
+                    <SheetDescription>
+                        Adjust your breathing session to your liking.
+                    </SheetDescription>
+                </SheetHeader>
+                <div className="py-4 space-y-8">
+                    <div className="space-y-2">
+                        <Label>Cycle Duration: {settings.phaseDuration} seconds</Label>
+                        <Slider
+                            value={[settings.phaseDuration]}
+                            onValueChange={([val]) => setSettings(s => ({...s, phaseDuration: val}))}
+                            min={2} max={10} step={1}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Daily Goal: {settings.goalDuration} minutes</Label>
+                        <Slider
+                            value={[settings.goalDuration]}
+                            onValueChange={([val]) => setSettings(s => ({...s, goalDuration: val}))}
+                            min={1} max={60} step={1}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Soundscape</Label>
+                        <RadioGroup
+                            value={settings.soundscape}
+                            onValueChange={(val) => {
+                                const newSound = soundscapes.find(s => s.name === val);
+                                if (newSound) {
+                                    setSettings(s => ({ ...s, soundscape: newSound.name }));
+                                    setCurrentSound(newSound);
+                                }
+                            }}
+                            className="gap-2"
+                        >
+                            {soundscapes.map(sound => (
+                                <div key={sound.id} className="flex items-center space-x-3">
+                                    <RadioGroupItem value={sound.name} id={sound.id} />
+                                    <Label htmlFor={sound.id} className="font-normal cursor-pointer">{sound.name}</Label>
+                                </div>
+                            ))}
+                        </RadioGroup>
+                    </div>
+                </div>
+            </SheetContent>
+        </Sheet>
     </div>
   );
 }
