@@ -1,19 +1,22 @@
-import type { NextConfig } from 'next';
-import withPWA from "@ducanh2912/next-pwa";
+// @ts-check
 
-const pwaConfig = withPWA({
-  dest: "public",
+/** @type {import('@ducanh2912/next-pwa').PWAConfig} */
+const pwaConfig = {
+  dest: 'public',
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   swcMinify: true,
-  disable: process.env.NODE_ENV === "development",
+  disable: process.env.NODE_ENV === 'development',
   workboxOptions: {
     disableDevLogs: true,
   },
-});
+};
 
-const nextConfig: NextConfig = {
+const withPWA = require('@ducanh2912/next-pwa')(pwaConfig);
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   /* config options here */
   typescript: {
     ignoreBuildErrors: true,
@@ -62,7 +65,8 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://placehold.co https://images.unsplash.com https://picsum.photos; media-src 'self' https://www.soundhelix.com; connect-src 'self'; font-src 'self' data:;",
+            value:
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://placehold.co https://images.unsplash.com https://picsum.photos; media-src 'self' https://www.soundhelix.com; connect-src 'self'; font-src 'self' data:;",
           },
         ],
       },
@@ -70,4 +74,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default pwaConfig(nextConfig);
+module.exports = withPWA(nextConfig);
