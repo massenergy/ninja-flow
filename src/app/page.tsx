@@ -132,7 +132,7 @@ export default function NinjaFlowPage() {
       <audio ref={audioRef} />
       <div className="w-full bg-primary/10 p-2 text-center text-sm text-primary-foreground flex items-center justify-center gap-2">
         <Info className="w-4 h-4 text-primary" />
-        <span className="text-primary font-medium">Tip: Say 'Open Ninja Flow' to start</span>
+        <span className="text-primary font-medium">Practice regularly to increase cycle from 4s to 10s</span>
       </div>
       <main className="flex-1 flex flex-col items-center justify-center p-4 gap-8">
         <div className="text-center h-8 mb-2">
