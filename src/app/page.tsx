@@ -20,8 +20,29 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 
 
+import { BeforeInstallPromptEvent } from '@/types/before-install-prompt';
 
 export default function NinjaFlowPage() {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
   const [settings, setSettings] = useState({
     phaseDuration: 4,
     goalDuration: 5,
@@ -156,7 +177,7 @@ export default function NinjaFlowPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{goalInMinutes}m</div>
-              <p className="text-xs text-muted-foreground">daily goal</p>
+              <p className="text-xs text-muted-foreground">session goal</p>
             </CardContent>
           </Card>
           <Card className="glass-card cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
@@ -203,7 +224,7 @@ export default function NinjaFlowPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Daily Goal: {settings.goalDuration} minutes</Label>
+              <Label>Session Goal: {settings.goalDuration} minutes</Label>
               <Slider
                 value={[settings.goalDuration]}
                 onValueChange={([val]) => setSettings(s => ({ ...s, goalDuration: val }))}
@@ -228,6 +249,12 @@ export default function NinjaFlowPage() {
                 </div>
               </RadioGroup>
             </div>
+
+            {deferredPrompt && (
+              <Button onClick={handleInstallClick} className="w-full">
+                Install App
+              </Button>
+            )}
           </div>
         </SheetContent>
       </Sheet>
