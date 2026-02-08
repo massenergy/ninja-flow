@@ -58,7 +58,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://placehold.co https://images.unsplash.com https://picsum.photos; media-src 'self' https:; connect-src 'self' https:; font-src 'self' data:;",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://placehold.co https://images.unsplash.com https://picsum.photos; media-src 'self'; connect-src 'self'; font-src 'self' data:;",
           },
         ],
       },

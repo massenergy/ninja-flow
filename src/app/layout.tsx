@@ -28,6 +28,8 @@ export const viewport = {
   themeColor: '#7950F2',
 };
 
+import { PWADevCleanup } from '@/components/pwa-dev-cleanup';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,6 +39,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body className={cn('font-body antialiased')}>
+        <PWADevCleanup />
         {children}
         <Toaster />
       </body>

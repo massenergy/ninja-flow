@@ -18,19 +18,14 @@ import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
-const soundscapes = [
-  { id: 'zen-garden', name: 'Zen Garden', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-  { id: 'ocean-waves', name: 'Ocean Waves', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-  { id: 'forest-rain', name: 'Forest Rain', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
-];
+
 
 
 export default function NinjaFlowPage() {
   const [settings, setSettings] = useState({
     phaseDuration: 4,
     goalDuration: 5,
-    soundscape: 'Zen Garden',
-    volume: 0.35,
+
     theme: 'light',
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -44,7 +39,6 @@ export default function NinjaFlowPage() {
         setSettings(prevSettings => ({
           ...prevSettings,
           ...loadedSettings,
-          volume: loadedSettings.volume ?? 0.35,
           theme: loadedSettings.theme ?? 'light'
         }));
       }
@@ -92,26 +86,6 @@ export default function NinjaFlowPage() {
     previousSessionActiveRef.current = isSessionActive;
   }, [isSessionActive, totalTime]);
 
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [currentSound, setCurrentSound] = useState(() => soundscapes.find(s => s.name === settings.soundscape) || soundscapes[0]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = settings.volume;
-      if (audioRef.current.src !== currentSound.url) {
-        audioRef.current.src = currentSound.url;
-        audioRef.current.loop = true;
-      }
-      if (isSessionActive) {
-        // Only trigger play from effect if not already playing (avoids race with click handler)
-        if (audioRef.current.paused) {
-          audioRef.current.play().catch(e => console.error("Audio play failed in effect", e));
-        }
-      } else {
-        audioRef.current.pause();
-      }
-    }
-  }, [isSessionActive, currentSound.url, settings.volume]);
 
   // Helper to format duration showing MM:SS
   const formatTimer = (ms: number) => {
@@ -121,16 +95,7 @@ export default function NinjaFlowPage() {
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
 
-  const handleToggleSession = () => {
-    // Attempt to start audio context on user interaction
-    if (!isSessionActive && audioRef.current) {
-      audioRef.current.play().catch(e => {
-        // Ignore error here, useEffect will retry or it's just allowed to fail if blocked
-        console.log("Pre-play failed/interrupted", e);
-      });
-    }
-    toggleSession();
-  };
+
 
   const goalInMinutes = settings.goalDuration;
 
@@ -144,7 +109,6 @@ export default function NinjaFlowPage() {
 
   return (
     <div className="flex flex-col min-h-screen text-slate-800 dark:text-slate-200">
-      <audio ref={audioRef} playsInline />
       <div className="w-full bg-primary/10 p-2 text-center text-sm text-primary-foreground flex items-center justify-center gap-2">
         <Info className="w-4 h-4 text-primary" />
         <span className="text-primary font-medium">Practice regularly to increase cycle from 4s to 10s</span>
@@ -167,7 +131,7 @@ export default function NinjaFlowPage() {
           className="relative flex items-center justify-center w-64 h-64 sm:w-80 sm:h-80 transition-transform ease-in-out"
         >
           <Button
-            onClick={handleToggleSession}
+            onClick={toggleSession}
             className={cn(
               'relative w-full h-full rounded-full shadow-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-primary transition-all duration-300',
               isSessionActive ? 'bg-opacity-80' : 'bg-opacity-100',
@@ -184,7 +148,7 @@ export default function NinjaFlowPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
           <Card className="glass-card cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Goal</CardTitle>
@@ -193,16 +157,6 @@ export default function NinjaFlowPage() {
             <CardContent>
               <div className="text-2xl font-bold">{goalInMinutes}m</div>
               <p className="text-xs text-muted-foreground">daily goal</p>
-            </CardContent>
-          </Card>
-          <Card className="glass-card cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Audio</CardTitle>
-              <Music className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold truncate">{settings.soundscape}</div>
-              <p className="text-xs text-muted-foreground">{Math.round(settings.volume * 100)}% Vol · Soundscape</p>
             </CardContent>
           </Card>
           <Card className="glass-card cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
@@ -256,35 +210,7 @@ export default function NinjaFlowPage() {
                 min={1} max={60} step={1}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Volume: {Math.round(settings.volume * 100)}%</Label>
-              <Slider
-                value={[settings.volume * 100]}
-                onValueChange={([val]) => setSettings(s => ({ ...s, volume: val / 100 }))}
-                min={0} max={100} step={1}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Soundscape</Label>
-              <RadioGroup
-                value={settings.soundscape}
-                onValueChange={(val) => {
-                  const newSound = soundscapes.find(s => s.name === val);
-                  if (newSound) {
-                    setSettings(s => ({ ...s, soundscape: newSound.name }));
-                    setCurrentSound(newSound);
-                  }
-                }}
-                className="gap-2"
-              >
-                {soundscapes.map(sound => (
-                  <div key={sound.id} className="flex items-center space-x-3">
-                    <RadioGroupItem value={sound.name} id={sound.id} />
-                    <Label htmlFor={sound.id} className="font-normal cursor-pointer">{sound.name}</Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
+
             <div className="space-y-2">
               <Label>Theme</Label>
               <RadioGroup
