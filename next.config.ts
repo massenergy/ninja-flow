@@ -5,6 +5,7 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
+  minify: false,
 });
 
 /** @type {import('next').NextConfig} */
@@ -16,6 +17,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+
   images: {
     remotePatterns: [
       {
