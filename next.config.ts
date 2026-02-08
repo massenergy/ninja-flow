@@ -1,6 +1,7 @@
 // @ts-check
 
-const withPWA = require('@ducanh2912/next-pwa').default({
+const nextPWA = require('@ducanh2912/next-pwa');
+const withPWA = (nextPWA.default || nextPWA)({
   dest: 'public',
   register: true,
   skipWaiting: true,
