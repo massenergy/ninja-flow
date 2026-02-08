@@ -103,7 +103,10 @@ export default function NinjaFlowPage() {
         audioRef.current.loop = true;
       }
       if (isSessionActive) {
-        audioRef.current.play().catch(e => console.error("Audio play failed", e));
+        // Only trigger play from effect if not already playing (avoids race with click handler)
+        if (audioRef.current.paused) {
+          audioRef.current.play().catch(e => console.error("Audio play failed in effect", e));
+        }
       } else {
         audioRef.current.pause();
       }
@@ -119,9 +122,12 @@ export default function NinjaFlowPage() {
   };
 
   const handleToggleSession = () => {
+    // Attempt to start audio context on user interaction
     if (!isSessionActive && audioRef.current) {
-      // Explicitly trigger play on user interaction to handle mobile autoplay restrictions
-      audioRef.current.play().catch(e => console.error("Manual audio play failed", e));
+      audioRef.current.play().catch(e => {
+        // Ignore error here, useEffect will retry or it's just allowed to fail if blocked
+        console.log("Pre-play failed/interrupted", e);
+      });
     }
     toggleSession();
   };
